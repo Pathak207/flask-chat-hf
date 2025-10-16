@@ -1,15 +1,15 @@
 from flask import Flask, request, jsonify
 from openai import OpenAI
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
-# 🔹 Hugging Face token from environment (Render secret)
+# Hugging Face token from environment
 HF_TOKEN = os.environ.get("HF_TOKEN")
 if not HF_TOKEN:
     raise ValueError("HF_TOKEN environment variable is not set!")
 
-# 🔹 OpenAI client via Hugging Face
 client = OpenAI(
     base_url="https://router.huggingface.co/v1",
     api_key=HF_TOKEN,
@@ -26,24 +26,29 @@ def chat():
     try:
         print(f"💬 Received prompt: {prompt}")
 
-        # 🔹 Chat completion call
-        completion = client.chat.completions.create(
-            model="moonshotai/Kimi-K2-Instruct-0905",
-            messages=[{"role": "user", "content": prompt}]
-        )
+        # 🔹 Real-time checks for special prompts
+        if "date" in prompt.lower() or "time" in prompt.lower():
+            now = datetime.now()
+            date_str = now.strftime("%d %B %Y")          # e.g., 16 October 2025
+            day_str = now.strftime("%A")                 # e.g., Thursday
+            time_str = now.strftime("%H:%M:%S")          # e.g., 14:30:15
+            response = f"Aaj ki tareekh hai: {date_str} ({day_str}) aur samay hai: {time_str}"
+        else:
+            # 🔹 AI model response
+            completion = client.chat.completions.create(
+                model="moonshotai/Kimi-K2-Instruct-0905",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            response = completion.choices[0].message.content
 
-        # 🔹 Extract response safely
-        message = completion.choices[0].message.content
-        print(f"✅ Generated response: {message}")
-
-        return jsonify({"response": message})
+        print(f"✅ Generated response: {response}")
+        return jsonify({"response": response})
 
     except Exception as e:
         print(f"❌ Exception: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # 🔹 Dynamic port from environment (Render provides PORT)
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Starting server on port {port}...")
     app.run(host="0.0.0.0", port=port, debug=True)
