@@ -39,6 +39,5 @@ def chat():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # 0.0.0.0 -> emulator/other devices can access it
-    # 🔹 Port 5001 (to avoid conflict with 5000)
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render automatically provide karega
+    app.run(host="0.0.0.0", port=port)
