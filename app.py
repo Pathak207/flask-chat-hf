@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from openai import OpenAI
 import os
 from datetime import datetime
+import pytz  # pip install pytz
 
 app = Flask(__name__)
 
@@ -26,12 +27,16 @@ def chat():
     try:
         print(f"💬 Received prompt: {prompt}")
 
-        # 🔹 Real-time checks for special prompts
+        # 🔹 Real-time date/time handling
         if "date" in prompt.lower() or "time" in prompt.lower():
-            now = datetime.now()
-            date_str = now.strftime("%d %B %Y")          # e.g., 16 October 2025
-            day_str = now.strftime("%A")                 # e.g., Thursday
-            time_str = now.strftime("%H:%M:%S")          # e.g., 14:30:15
+            ist = pytz.timezone("Asia/Kolkata")
+            now = datetime.now(ist)
+
+            date_str = now.strftime("%d %B %Y")       # 16 October 2025
+            day_str = now.strftime("%A")              # Thursday
+            time_str = now.strftime("%H:%M:%S")      # 10:45:14
+
+            # Roman Hindi output
             response = f"Aaj ki tareekh hai: {date_str} ({day_str}) aur samay hai: {time_str}"
         else:
             # 🔹 AI model response
@@ -52,3 +57,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Starting server on port {port}...")
     app.run(host="0.0.0.0", port=port, debug=True)
+
